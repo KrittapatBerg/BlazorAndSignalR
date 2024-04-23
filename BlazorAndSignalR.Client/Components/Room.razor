@@ -1,4 +1,4 @@
-﻿@if(CurrentRoom is not null)
+﻿@if(CurrentRoom is not null) 
 {
     <h3>Room: @CurrentRoom.RoomName</h3>
         
@@ -42,27 +42,23 @@
     {
         <h4>It's @CurrentRoom.Game.CurrentPlayetSymbol's Turn</h4>
 
-        <h6>Currently playing: @CurrentRoom.Players[0].Name (X), @CurrentRoom.Players[1].Name (O)</h6>
+        <span>Currently playing: @CurrentRoom.Players[0].Name (X), @CurrentRoom.Players[1].Name (O)</span>
 
-        <table>
-            @for (int row = 0; row < 3; row++)
-            {
-                <tr>
-                    @for (int col = 0; col < 3; col++)
-                    {
-                        var r = row;
-                        var c = col;
-                        <td>
-                            <button @onclick="() => MakeMove(row, col)">
-                                @CurrentRoom.Game.Board[r][c]
-                            </button>
-                        </td>
-                    }
-                </tr>
-            }
-        </table>
+            <table class="tic-tac-toe">
+                @for (int row = 0; row < 3; row++)
+                {
+                    <tr>
+                        @for (int col = 0; col < 3; col++)
+                        {
+                            var r = row;
+                            var c = col;
+                            <td @onclick="() => MakeMove(r, c)"> @CurrentRoom.Game.Board[r][c] </td>
+                        }
+                    </tr>
+                }
+            </table>
 
-        @if (!IsMyTurn() && !CurrentRoom.Game.GameOver)
+        if (!IsMyTurn() && !CurrentRoom.Game.GameOver)
         {
             <p>Please wait for the other player to make a move.</p>
         }
@@ -111,10 +107,15 @@ else
 
     private async Task MakeMove(int row, int col)
     {
-        // if (HubConnection is null || CurrentRoom is null)
-        //     return;
-
-        // await HubConnection.InvokeAsync("MakeMove", CurrentRoom.RoomId, row, col);
+        if (IsMyTurn() && CurrentRoom is not null && CurrentRoom.Game.GameStarted
+            && !CurrentRoom.Game.GameOver && HubConnection is not null)
+        {
+            await HubConnection.InvokeAsync("MakeMove",
+            CurrentRoom.RoomId,
+            row,
+            col,
+            myPlayerId);           
+        }
     }
 
     private bool IsMyTurn()
@@ -123,7 +124,8 @@ else
         {
             return myPlayerId == CurrentRoom.Game.CurrentPlayerId;
         }
-        return false; 
-
+        return false;
     }
-}
+} 
+
+

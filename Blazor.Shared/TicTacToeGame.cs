@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +24,7 @@ public class TicTacToeGame
     {
         InitializeBoard();
     }
+
     public void StartGame()
     {
         InitializeBoard();
@@ -44,17 +46,66 @@ public class TicTacToeGame
             }
             Board.Add(row);
         }
+    }
+ 
+    public void TogglePlayer()
+    {
+        CurrentPlayerId = CurrentPlayerId == PlayerXId ? PlayerOId : PlayerXId;
+    }   
 
-        //this one works as well. 
-        //Board.Clear();
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    Board.Add(new List<string>(3));
-        //    for (int j = 0; j < 3; j++)
-        //    {
-        //        Board[i].Add(string.Empty);
-        //    }
-        //}  
+    public bool MakeMove(int row, int col, string playerId)
+    {
+        if(playerId != CurrentPlayerId
+            || row < 0 || row >= 3
+            || col < 0 || col >= 3
+            || Board[row][col] != string.Empty)
+        {
+            return false;
+        }
 
+        Board[row][col] = CurrentPlayetSymbol;
+        TogglePlayer();
+        return true;
+    }
+    
+    public string CheckWinner()
+    {
+        //rows and columns
+        for (int i = 0; i < 3; i++)
+        {
+            if (!string.IsNullOrEmpty(Board[i][0]) 
+                && Board[i][0] == Board[i][1] 
+                && Board[i][0] == Board[i][2])
+            {
+                return Board[i][0];
+            }
+
+            if (!string.IsNullOrEmpty(Board[0][i]) 
+                && Board[0][i] == Board[1][i] 
+                && Board[0][i] == Board[2][i])
+            {
+                return Board[0][i];
+            }
+        }
+
+        //diagonals
+        if (!string.IsNullOrEmpty(Board[0][0]) 
+            && Board[0][0] == Board[1][1] 
+            && Board[1][1] == Board[2][2])
+        {
+            return Board[0][0];
+        }
+        if (!string.IsNullOrEmpty(Board[0][2]) 
+             && Board[0][2] == Board[1][1] 
+             && Board[1][1] == Board[2][0])
+        {
+            return Board[0][2];
+        }
+        return string.Empty;
+    }
+
+    public bool CheckDraw()
+    {
+        return IsDraw = Board.All(row => row.All(cell => !string.IsNullOrEmpty(cell)));
     }
 }
