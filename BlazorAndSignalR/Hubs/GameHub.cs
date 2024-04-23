@@ -46,5 +46,15 @@ namespace BlazorAndSignalR.Hubs
             }
             return null;
         }
+
+        public async Task StartGame(string roomId)
+        {
+            var room = rooms.FirstOrDefault(r => r.RoomId == roomId);
+            if (room is not null)
+            {
+                room.Game.StartGame();
+                await Clients.Group(roomId).SendAsync("UpdateGame", room);
+            }
+        }
     }
 }

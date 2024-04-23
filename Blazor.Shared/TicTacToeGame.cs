@@ -23,18 +23,17 @@ public class TicTacToeGame
     {
         InitializeBoard();
     }
+    public void StartGame()
+    {
+        InitializeBoard();
+        CurrentPlayerId = PlayerXId;
+        GameStarted = true;
+        GameOver = false;
+        Winner = string.Empty;
+        IsDraw = false;
+    }
     private void InitializeBoard()
     {
-        //Board.Clear();
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    Board.Add(new List<string>(3));
-        //    for (int j = 0; j < 3; j++)
-        //    {
-        //        Board[i].Add(string.Empty);
-        //    }
-        //} this one works as well.  
-
         Board.Clear();
         for (int i = 0; i < 3; i++)
         {
@@ -45,5 +44,17 @@ public class TicTacToeGame
             }
             Board.Add(row);
         }
-    }   
+
+        //this one works as well. 
+        //Board.Clear();
+        //for (int i = 0; i < 3; i++)
+        //{
+        //    Board.Add(new List<string>(3));
+        //    for (int j = 0; j < 3; j++)
+        //    {
+        //        Board[i].Add(string.Empty);
+        //    }
+        //}  
+
+    }
 }

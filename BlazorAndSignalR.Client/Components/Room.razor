@@ -1,21 +1,72 @@
 ﻿@if(CurrentRoom is not null)
 {
-    <div class="room">
-        <h3>Room: @CurrentRoom.RoomName</h3>
-        <ul>
-            @if(CurrentRoom.Players.Count < 2)
+    <h3>Room: @CurrentRoom.RoomName</h3>
+        
+    if(CurrentRoom.Players.Count < 2)
+    {
+        <h5>Waiting for another player to join...</h5>
+    }
+    else
+    {
+        @foreach (var player in CurrentRoom.Players)
+        {
+            <li>@player.Name</li>
+        }
+    }
+
+    if(!CurrentRoom.Game.GameStarted && CurrentRoom.Game.PlayerXId != myPlayerId &&
+        CurrentRoom.Players.Count == 2)
+    {
+        <h5>Waiting for other player to start the game... </h5>
+    }
+
+    if(CurrentRoom.Game.GameOver && !CurrentRoom.Game.IsDraw)
+    {
+        <h5>Game Over! Winner: @CurrentRoom.Game.Winner</h5>
+    }
+
+    if(CurrentRoom.Game.GameOver && CurrentRoom.Game.IsDraw)
+    {
+        <h5>Game Over! It's a draw!</h5>
+    }
+
+    if((!CurrentRoom.Game.GameStarted || CurrentRoom.Game.GameOver)
+            && CurrentRoom.Game.PlayerXId == myPlayerId
+            && CurrentRoom.Players.Count == 2)
+    {
+        <button @onclick="StartGame">Start Game</button>
+
+    }
+
+    if(CurrentRoom.Game.GameStarted)
+    {
+        <h4>It's @CurrentRoom.Game.CurrentPlayetSymbol's Turn</h4>
+
+        <h6>Currently playing: @CurrentRoom.Players[0].Name (X), @CurrentRoom.Players[1].Name (O)</h6>
+
+        <table>
+            @for (int row = 0; row < 3; row++)
             {
-                <h5>Waiting for another player to join...</h5>
+                <tr>
+                    @for (int col = 0; col < 3; col++)
+                    {
+                        var r = row;
+                        var c = col;
+                        <td>
+                            <button @onclick="() => MakeMove(row, col)">
+                                @CurrentRoom.Game.Board[r][c]
+                            </button>
+                        </td>
+                    }
+                </tr>
             }
-            else
-            {
-                @foreach (var player in CurrentRoom.Players)
-                {
-                    <li>@player.Name</li>
-                }
-            }
-        </ul>
-    </div>
+        </table>
+
+        @if (!IsMyTurn() && !CurrentRoom.Game.GameOver)
+        {
+            <p>Please wait for the other player to make a move.</p>
+        }
+    }
 }
 else
 {
@@ -23,6 +74,7 @@ else
 }
 
 @code {
+    private string? myPlayerId;
     [CascadingParameter]
     public HubConnection? HubConnection { get; set; }
     [Parameter]
@@ -33,10 +85,45 @@ else
         if (CurrentRoom is null || HubConnection is null || HubConnection.ConnectionId is null)
             return;
 
+        myPlayerId = HubConnection.ConnectionId;
+
         HubConnection.On<Player>("PlayerJoined", player =>
         {
             CurrentRoom.Players.Add(player);
             StateHasChanged();
         });
+
+        HubConnection.On<GameRoom>("UpdateGame", serverRoom =>
+        {
+            CurrentRoom = serverRoom;
+            StateHasChanged();
+        });
+    }
+
+    async Task StartGame()
+    {
+        if (HubConnection is null || CurrentRoom is null)
+            return;
+
+        await HubConnection.InvokeAsync("StartGame", CurrentRoom.RoomId);
+
+    }
+
+    private async Task MakeMove(int row, int col)
+    {
+        // if (HubConnection is null || CurrentRoom is null)
+        //     return;
+
+        // await HubConnection.InvokeAsync("MakeMove", CurrentRoom.RoomId, row, col);
+    }
+
+    private bool IsMyTurn()
+    {
+        if (CurrentRoom is not null)
+        {
+            return myPlayerId == CurrentRoom.Game.CurrentPlayerId;
+        }
+        return false; 
+
     }
 }
